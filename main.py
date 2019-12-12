@@ -18,6 +18,17 @@ class Dataset:
         self.data = np.array(self.data)
         self.label = self.data[:, -1]
         self.data = self.data[:, :-1]
+        
+        idx = np.random.choice(len(self.data), replace=True, size=int(0.2*len(self.data)))
+        self.test_data = self.data[idx]
+        self.test_label = self.label[idx]
+        
+        rest_idx = np.arange(0, len(self.data))
+        rest_idx = np.delete(rest_idx, idx)
+
+        self.data = self.data[rest_idx]
+        self.label = self.label[rest_idx]
+        
     
     def bootstrap(self, k=5, size=150):
         res_data = []
@@ -48,10 +59,32 @@ class Bagging:
     def predict(self):
         pass
     
+    def get_accuracy(self):
+        res = []
+        for i in range(self.jungle_size):
+            res.append(self.jungle[i].predict(self.dataset.test_data))
+        res = np.array(res)
+        print(res)
+        tmp = []
+        for i in res.T:
+            u, c = np.unique(i, return_counts=True)
+            max_count = np.argmax(c)
+            tmp.append(u[max_count])
+        print((np.array(tmp) == self.dataset.test_label).mean())
+        
+    
 
 
 dataset = Dataset("./dataset/heart.csv")
 
+
+
+
+
+
+
+
 bagging = Bagging(dataset)
 
 bagging.fit()
+bagging.get_accuracy()
