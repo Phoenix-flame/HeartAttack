@@ -51,6 +51,8 @@ class Bagging:
         self.dataset = dataset
         self.data, self.label = self.dataset.bootstrap(k=size)
         self.jungle = []
+        
+        self.name = 'Bagging'
     
     def fit(self):
         for i in range(self.jungle_size):
@@ -59,20 +61,29 @@ class Bagging:
             self.jungle.append(tree)
     
     def predict(self):
-        pass
-    
-    def get_accuracy(self):
         res = []
         for i in range(self.jungle_size):
             res.append(self.jungle[i].predict(self.dataset.test_data))
         res = np.array(res)
-        print(res)
-        tmp = []
+        pred = []
         for i in res.T:
             u, c = np.unique(i, return_counts=True)
             max_count = np.argmax(c)
-            tmp.append(u[max_count])
-        return ((np.array(tmp) == self.dataset.test_label).mean())
+            pred.append(u[max_count])
+        return np.array(pred)
+    
+    def get_accuracy(self):
+        pred = self.predict()
+        acc = (pred == self.dataset.test_label).mean()
+        print(self.name, ' -> ', acc * 100)
+        return acc
+    
+    def confusion_matrix(self):
+        pred = self.predict()
+        cm = confusion_matrix(self.dataset.test_label, pred)
+        plt.title(self.name + " Confusion Matrix")
+        sns.heatmap(cm,annot=True,cmap="Blues",fmt="d",cbar=False)
+        plt.show()
         
     
 
@@ -87,6 +98,8 @@ class RandomForest:
         self.data, self.label = self.dataset.bootstrap(k=size)
         self.jungle = []
         self.random_features = []
+        
+        self.name = 'Random Forest'
         
         
     def fit(self):
@@ -103,22 +116,25 @@ class RandomForest:
         for i in range(self.jungle_size):
             res.append(self.jungle[i].predict(self.dataset.test_data[:, self.random_features[i]]))
         res = np.array(res)
-        tmp = []
+        pred = []
         for i in res.T:
             u, c = np.unique(i, return_counts=True)
             max_count = np.argmax(c)
-            tmp.append(u[max_count])
-        return np.array(tmp)
+            pred.append(u[max_count])
+        return np.array(pred)
     
     def get_accuracy(self):
-        tmp = self.predict()
-        return ((np.array(tmp) == self.dataset.test_label).mean())   
+        pred = self.predict()
+        acc = (pred == self.dataset.test_label).mean()
+        print(self.name, " -> ", acc * 100)
+        return acc
     
     def confusion_matrix(self):
         pred = self.predict()
         cm = confusion_matrix(self.dataset.test_label, pred)
-        plt.title("DecisionTree_cm")
+        plt.title(self.name + " Confusion Matrix")
         sns.heatmap(cm,annot=True,cmap="Blues",fmt="d",cbar=False)
+        plt.show()
         
         
 dataset = Dataset("./dataset/heart.csv")
@@ -130,15 +146,13 @@ dataset = Dataset("./dataset/heart.csv")
 
 
 
-# bagging = Bagging(dataset)
-# bagging.fit()
-# bagging.get_accuracy()
+bag = Bagging(dataset)
+bag.fit()
+# bag.confusion_matrix()
+bag.get_accuracy()
 
-# s = 0
-# for i in range(1):
+
 rf = RandomForest(dataset)
 rf.fit()
-rf.confusion_matrix()
-    # s += rf.get_accuracy()
-
-# print(s/1)
+# rf.confusion_matrix()
+rf.get_accuracy()
